@@ -1,4 +1,5 @@
 const Reservation = require("../models/Reservation");
+const Table = require("../models/Table");
 
 // Customer Reserve Table
 const createReservation = async (req, res) => {
@@ -22,7 +23,22 @@ const createReservation = async (req, res) => {
       });
     }
 
-    // Check duplicate reservation
+    const table = await Table.findOne({ tableNumber });
+
+    if (!table) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+
+    if (numberOfGuests > table.capacity) {
+      return res.status(400).json({
+        success: false,
+        message: `This table can accommodate only ${table.capacity} guests`,
+      });
+    }
+
     const existingReservation = await Reservation.findOne({
       tableNumber,
       reservationDate,
