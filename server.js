@@ -10,6 +10,8 @@ const orderRoutes = require("./routes/orderRoutes");
 const reservationRoutes = require("./routes/reservationRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const tableRoutes = require("./routes/tableRoutes");
+
 
 
 dotenv.config();
@@ -27,6 +29,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/menu", menuRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/tables", tableRoutes);
 app.get("/api/profile", protect, (req, res) => {
 
   res.json({
