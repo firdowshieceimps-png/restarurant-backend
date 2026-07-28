@@ -6,25 +6,11 @@ const tableSchema = new mongoose.Schema(
       type: Number,
       required: true,
       unique: true,
-      trim: true,
     },
-
     capacity: {
       type: Number,
       required: true,
       min: 1,
-    },
-
-    status: {
-      type: String,
-      enum: ["Available", "Maintenance"],
-      default: "Available",
-    },
-
-    location: {
-      type: String,
-      enum: ["Indoor", "Outdoor", "Window"],
-      default: "Indoor",
     },
   },
   {
