@@ -5,16 +5,24 @@ const getAvailableTables = async (req, res) => {
   try {
     const { date, time } = req.query;
 
+    const selectedDate = new Date(date);
+
+    const nextDate = new Date(date);
+    nextDate.setDate(nextDate.getDate() + 1);
+
     const tables = await Table.find();
 
     const reservations = await Reservation.find({
-      reservationDate: date,
+      reservationDate: {
+        $gte: selectedDate,
+        $lt: nextDate,
+      },
       reservationTime: time,
       status: "Booked",
     });
 
     const bookedTables = reservations.map(
-      (r) => r.tableNumber
+      (reservation) => reservation.tableNumber
     );
 
     const result = tables.map((table) => ({
