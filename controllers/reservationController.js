@@ -91,12 +91,14 @@ const createReservation = async (req, res) => {
       message: `Table ${availableTable.tableNumber} reserved successfully`,
       data: reservation,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
+  }catch (error) {
+  console.log("Reservation Error:", error.response?.data);
+
+  toast.error(
+    error.response?.data?.message ||
+    "Reservation failed"
+  );
+}
 };
 
 // Customer - View My Reservations
