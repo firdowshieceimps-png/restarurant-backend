@@ -4,6 +4,7 @@ const Table = require("../models/Table");
 // Customer Reserve Table
 const createReservation = async (req, res) => {
   try {
+    console.log("Reservation Request Body:", req.body);
     const {
       reservationDate,
       reservationTime,
