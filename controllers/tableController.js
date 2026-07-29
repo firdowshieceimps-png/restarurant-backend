@@ -3,14 +3,18 @@ const Reservation = require("../models/Reservation");
 
 const getAvailableTables = async (req, res) => {
   try {
-    const { date, time } = req.query;
+    const { date, time, guests } = req.query;
 
     const selectedDate = new Date(date);
 
     const nextDate = new Date(date);
     nextDate.setDate(nextDate.getDate() + 1);
 
-    const tables = await Table.find();
+    const tables = await Table.find({
+      capacity: {
+        $gte: Number(guests),
+      },
+    });
 
     const reservations = await Reservation.find({
       reservationDate: {
