@@ -5,14 +5,12 @@ const Table = require("../models/Table");
 const createReservation = async (req, res) => {
   try {
     const {
-      tableNumber,
       reservationDate,
       reservationTime,
       numberOfGuests,
     } = req.body;
 
     if (
-      !tableNumber ||
       !reservationDate ||
       !reservationTime ||
       !numberOfGuests
@@ -23,47 +21,73 @@ const createReservation = async (req, res) => {
       });
     }
 
-    const table = await Table.findOne({ tableNumber });
+    const selectedDate = new Date(reservationDate);
 
-    if (!table) {
-      return res.status(404).json({
-        success: false,
-        message: "Table not found",
-      });
-    }
+    const nextDate = new Date(reservationDate);
+    nextDate.setDate(nextDate.getDate() + 1);
 
-    if (numberOfGuests > table.capacity) {
+    // Find tables that can accommodate the guests
+    const suitableTables = await Table.find({
+      capacity: {
+        $gte: Number(numberOfGuests),
+      },
+    }).sort({ capacity: 1 });
+
+    if (suitableTables.length === 0) {
       return res.status(400).json({
         success: false,
-        message: `This table can accommodate only ${table.capacity} guests`,
+        message:
+          "No table available for the selected number of guests",
       });
     }
 
-    const existingReservation = await Reservation.findOne({
-      tableNumber,
-      reservationDate,
-      reservationTime,
-      status: "Booked",
-    });
+    // Find booked tables for the selected date and time
+    const bookedReservations =
+      await Reservation.find({
+        reservationDate: {
+          $gte: selectedDate,
+          $lt: nextDate,
+        },
+        reservationTime,
+        status: "Booked",
+      });
 
-    if (existingReservation) {
+    const bookedTables =
+      bookedReservations.map(
+        (reservation) =>
+          reservation.tableNumber
+      );
+
+    // Get first available table
+    const availableTable =
+      suitableTables.find(
+        (table) =>
+          !bookedTables.includes(
+            table.tableNumber
+          )
+      );
+
+    if (!availableTable) {
       return res.status(400).json({
         success: false,
-        message: "Table already booked for this date and time",
+        message:
+          "No tables available for the selected date and time",
       });
     }
 
-    const reservation = await Reservation.create({
-      customer: req.user.id,
-      tableNumber,
-      reservationDate,
-      reservationTime,
-      numberOfGuests,
-    });
+    const reservation =
+      await Reservation.create({
+        customer: req.user.id,
+        tableNumber:
+          availableTable.tableNumber,
+        reservationDate,
+        reservationTime,
+        numberOfGuests,
+      });
 
     res.status(201).json({
       success: true,
-      message: "Reservation created successfully",
+      message: `Table ${availableTable.tableNumber} reserved successfully`,
       data: reservation,
     });
   } catch (error) {
@@ -79,7 +103,9 @@ const getMyReservations = async (req, res) => {
   try {
     const reservations = await Reservation.find({
       customer: req.user.id,
-    }).populate("customer", "name email");
+    })
+      .populate("customer", "name email")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -98,7 +124,8 @@ const getMyReservations = async (req, res) => {
 const getAllReservations = async (req, res) => {
   try {
     const reservations = await Reservation.find()
-      .populate("customer", "name email");
+      .populate("customer", "name email")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -118,7 +145,10 @@ const updateReservationStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    const reservation = await Reservation.findById(req.params.id);
+    const reservation =
+      await Reservation.findById(
+        req.params.id
+      );
 
     if (!reservation) {
       return res.status(404).json({
@@ -133,7 +163,8 @@ const updateReservationStatus = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Reservation updated successfully",
+      message:
+        "Reservation updated successfully",
       data: reservation,
     });
   } catch (error) {
@@ -147,7 +178,10 @@ const updateReservationStatus = async (req, res) => {
 // Customer - Cancel Reservation
 const cancelReservation = async (req, res) => {
   try {
-    const reservation = await Reservation.findById(req.params.id);
+    const reservation =
+      await Reservation.findById(
+        req.params.id
+      );
 
     if (!reservation) {
       return res.status(404).json({
@@ -156,8 +190,10 @@ const cancelReservation = async (req, res) => {
       });
     }
 
-    // Only owner can cancel
-    if (reservation.customer.toString() !== req.user.id) {
+    if (
+      reservation.customer.toString() !==
+      req.user.id
+    ) {
       return res.status(403).json({
         success: false,
         message: "Access denied",
@@ -170,7 +206,8 @@ const cancelReservation = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Reservation cancelled successfully",
+      message:
+        "Reservation cancelled successfully",
     });
   } catch (error) {
     res.status(500).json({
