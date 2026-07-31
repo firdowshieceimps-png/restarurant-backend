@@ -9,6 +9,7 @@ const {
   getMyOrders,
   getAllOrders,
   updateOrderStatus,
+  cancelOrder,
 } = require("../controllers/orderController");
 
 router.post("/", protect, placeOrder);
@@ -16,5 +17,6 @@ router.get("/my-orders", protect, getMyOrders);
 router.get("/", protect, admin, getAllOrders);
 
 router.put("/:id", protect, admin, updateOrderStatus);
+router.put("/cancel/:id", protect, cancelOrder);
 
 module.exports = router;

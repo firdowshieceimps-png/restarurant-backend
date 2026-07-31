@@ -10,7 +10,7 @@ const reservationSchema = new mongoose.Schema(
 
     tableNumber: {
       type: Number,
-      required: true,
+      //required: true,
     },
 
     reservationDate: {
